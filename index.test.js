@@ -16,15 +16,6 @@ beforeAll(async () => {
     await Post.bulkCreate(postSeed);
     await Comment.bulkCreate(commentSeed);
     await Like.bulkCreate(likeSeed);
-
-    User.hasOne(Profile);
-    Profile.belongsTo(User);
-    User.hasMany(Post);
-    Post.belongsTo(User);
-    Post.hasMany(Comment);
-    Comment.belongsTo(Post);
-    User.hasMany(Like);
-    Like.belongsTo(User);
 });
 
 afterAll(async () => {
