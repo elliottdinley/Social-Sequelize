@@ -1,23 +1,59 @@
 const { Comment, Like, Post, Profile, User } = require("./index");
-const { db } = require('./db/connection.js');
 
-describe('Social Sequelzie Test', () => {
-    /**
-     * Runs the code prior to all tests
-     */
-    beforeAll(async () => {
-        // the 'sync' method will create tables based on the model class
-        // by setting 'force:true' the tables are recreated each time the test suite is run
-        await sequelize.sync({ force: true });
-    })
+const userSeed = require('./seed/users.json');
+const profileSeed = require('./seed/profiles.json');
+const postSeed = require('./seed/posts.json');
+const commentSeed = require('./seed/comments.json');
+const likeSeed = require('./seed/likes.json');
 
-    // Write your tests here
+const { sequelize } = require('./db/connection.js');
+
+beforeAll(async () => {
+    await sequelize.sync({ force: true });
     
-    test("replace with your test", function() {
-        expect(true).toBe(true);
-    })
+    await User.bulkCreate(userSeed);
+    await Profile.bulkCreate(profileSeed);
+    await Post.bulkCreate(postSeed);
+    await Comment.bulkCreate(commentSeed);
+    await Like.bulkCreate(likeSeed);
+
+    User.hasOne(Profile);
+    Profile.belongsTo(User);
+    User.hasMany(Post);
+    Post.belongsTo(User);
+    Post.hasMany(Comment);
+    Comment.belongsTo(Post);
+    User.hasMany(Like);
+    Like.belongsTo(User);
+});
+
+afterAll(async () => {
+    await sequelize.close();
+});
 
 
+describe('Database Connection', () => {
+    test('connects to the database and syncs models', async () => {
+        expect(User).toBeDefined();
+        expect(Profile).toBeDefined();
+        expect(Post).toBeDefined();
+        expect(Comment).toBeDefined();
+        expect(Like).toBeDefined();
+    });
+});
 
-
-})
+describe('Associations', () => {
+    test('verify associations are set up correctly', async () => {
+        const associatedProfile = await User.findOne({ include: Profile });
+        expect(associatedProfile).toHaveProperty('Profile');
+        
+        const associatedPosts = await User.findOne({ include: Post });
+        expect(associatedPosts).toHaveProperty('Posts');
+        
+        const associatedComments = await Post.findOne({ include: Comment });
+        expect(associatedComments).toHaveProperty('Comments');
+        
+        const associatedLikes = await User.findOne({ include: Like });
+        expect(associatedLikes).toHaveProperty('Likes');
+    });
+});
